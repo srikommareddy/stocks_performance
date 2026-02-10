@@ -20,7 +20,7 @@ if len(selected_tickers) != 4:
 else:
     all_tickers = [index_ticker] + selected_tickers
     
-   @st.cache_data
+    @st.cache_data
     def get_monthly_data(symbols, start):
         # Fetch data with auto_adjust to avoid the 'Adj Close' header issue
         # We use 'Close' which will now represent the adjusted price

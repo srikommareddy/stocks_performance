@@ -20,27 +20,33 @@ if len(selected_tickers) != 4:
 else:
     all_tickers = [index_ticker] + selected_tickers
     
-    @st.cache_data
+   @st.cache_data
     def get_monthly_data(symbols, start):
-        # Fetch daily data
-        data = yf.download(symbols, start=start, interval="1d")['Adj Close']
-        # Resample to Monthly (takes the last available price of the month)
-        monthly_close = data.resample('ME').last()
-        # Get the first available price of the month (approximate from daily)
-        monthly_open = data.resample('ME').first()
-        
-        # Calculate Index points (Column 1 & 2)
+        # Fetch data with auto_adjust to avoid the 'Adj Close' header issue
+        # We use 'Close' which will now represent the adjusted price
+        data = yf.download(symbols, start=start, interval="1d")
+    
+        # Access the 'Close' prices specifically
+        close_prices = data['Close']
+    
+        # Resample logic
+        monthly_close = close_prices.resample('ME').last()
+        monthly_open = close_prices.resample('ME').first()
+    
         df_result = pd.DataFrame(index=monthly_close.index)
+    
+        # Column 1 & 2: Index Points
         df_result['Index Open'] = monthly_open[index_ticker]
         df_result['Index Close'] = monthly_close[index_ticker]
-        
-        # Calculate % Changes
+    
+        # Column 3: Index % Change
         df_result['Index % Change'] = (df_result['Index Close'] / df_result['Index Open'] - 1) * 100
-        
+    
+        # Column 4, 5, 6, 7: Stock % Changes
         for stock in selected_tickers:
             stock_pct = (monthly_close[stock] / monthly_open[stock] - 1) * 100
             df_result[f'{stock} % Chg'] = stock_pct
-            
+        
         return df_result
 
     # Display Data
